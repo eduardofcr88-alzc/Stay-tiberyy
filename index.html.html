@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAY TIBERY — Análise de Ativo | Alianza Investimentos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --navy:   #0D1B2A;
+    --navy2:  #152233;
+    --gold:   #C9A84C;
+    --gold2:  #E8C96A;
+    --cream:  #F7F3EC;
+    --cream2: #EDE8DF;
+    --gray:   #9E9892;
+    --green:  #1F6B42;
+    --amber:  #B8711A;
+    --red:    #922620;
+    --white:  #FFFFFF;
+    --sidebar-w: 220px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  nav#sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--navy);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    border-right: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .nav-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+  .nav-brand .alianza {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .nav-brand .sub {
+    font-size: 9px;
+    color: var(--gray);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .nav-brand .empr {
+    margin-top: 14px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+  }
+  .nav-brand .empr strong {
+    color: var(--gold2);
+    font-weight: 600;
+    display: block;
+    font-size: 12px;
+  }
+
+  .nav-links {
+    flex: 1;
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 24px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all .2s;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+  }
+  .nav-link:hover { color: var(--gold); background: rgba(201,168,76,0.06); }
+  .nav-link.active {
+    color: var(--gold);
+    background: rgba(201,168,76,0.1);
+    border-left-color: var(--gold);
+  }
+  .nav-link .icon { font-size: 14px; width: 18px; text-align: center; }
+
+  .nav-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.6;
+  }
+
+  /* ── MAIN ── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  section.page {
+    min-height: 100vh;
+    padding: 60px 52px;
+    border-bottom: 1px solid var(--cream2);
+  }
+  section.page:nth-child(even) { background: var(--white); }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--cream2);
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--navy);
+    line-height: 1.1;
+  }
+  .page-header h1 span { color: var(--gold); }
+  .page-num {
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .page-badge {
+    background: var(--navy);
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    border: 1px solid rgba(201,168,76,0.3);
+  }
+
+  /* ── KPI GRID ── */
+  .kpi-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .kpi-grid-5 { grid-template-columns: repeat(5, 1fr); }
+  .kpi-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .kpi-card {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 20px 16px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+  .kpi-card .kpi-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .kpi-card .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+  }
+  .kpi-card .kpi-sub {
+    font-size: 10px;
+    color: var(--gray);
+    margin-top: 6px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .sec-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sec-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cream2);
+  }
+
+  /* ── CHARTS ── */
+  .chart-card {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid var(--cream2);
+    box-shadow: 0 2px 12px rgba(13,27,42,0.05);
+  }
+  .chart-card h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--cream2);
+  }
+
+  /* ── TWO COL ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ── TEXT BLOCK ── */
+  .text-block {
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 24px;
+    line-height: 1.8;
+    font-size: 13.5px;
+    color: #2a2a2a;
+    border-left: 4px solid var(--gold);
+  }
+
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .data-table thead tr {
+    background: var(--navy);
+    color: var(--gold);
+  }
+  .data-table thead th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .data-table tbody tr:nth-child(odd) { background: var(--cream); }
+  .data-table tbody tr:nth-child(even) { background: var(--white); }
+  .data-table tbody tr:hover { background: rgba(201,168,76,0.08); }
+  .data-table tbody td {
+    padding: 10px 14px;
+    color: var(--navy);
+    border-bottom: 1px solid var(--cream2);
+  }
+  .data-table tbody td:first-child { font-weight: 500; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .badge-green  { background: rgba(31,107,66,0.12);  color: var(--green); }
+  .badge-amber  { background: rgba(184,113,26,0.12); color: var(--amber); }
+  .badge-red    { background: rgba(146,38,32,0.12);  color: var(--red);   }
+  .badge-navy   { background: rgba(13,27,42,0.08);   color: var(--navy);  }
+
+  /* ── BAIRRO CARD ── */
+  .bairro-card {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--cream2);
+  }
+  .bairro-card .bairro-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    color: white;
+  }
+  .bairro-card .bairro-header h4 { font-size: 14px; font-weight: 700; }
+  .bairro-card .bairro-body {
+    padding: 16px 18px;
+    background: white;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #333;
+  }
+  .bairro-card .bairro-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .bairro-card .meta-item {
+    font-size: 10px;
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .bairro-card .meta-item strong { color: var(--navy); font-size: 11px; }
+
+  /* ── INFRA CATEGORY ── */
+  .infra-cat {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--cream2);
+  }
+  .infra-cat-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--navy);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .infra-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--cream2);
+    background: white;
+  }
+  .infra-item:last-child { border-bottom: none; }
+  .infra-item:nth-child(odd) { background: var(--cream); }
+  .infra-item .infra-name { color: var(--navy); }
+  .infra-item .infra-dist {
+    color: var(--amber);
+    font-weight: 700;
+    font-size: 12px;
+    background: rgba(184,113,26,0.1);
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+
+  /* ── FACTOR CARD ── */
+  .factor-card {
+    background: white;
+    border: 1px solid var(--cream2);
+    border-radius: 8px;
+    padding: 20px;
+    border-top: 3px solid var(--gold);
+  }
+  .factor-card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .factor-card p { font-size: 12.5px; color: #444; line-height: 1.7; }
+
+  /* ── SYNTHESIS BOX ── */
+  .synthesis-box {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 32px 36px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-top: 40px;
+  }
+  .synthesis-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+  }
+  .synthesis-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--gold);
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+  .synthesis-box p {
+    font-size: 13px;
+    line-height: 1.85;
+    color: rgba(255,255,255,0.82);
+  }
+
+  /* ── AVISO ── */
+  .aviso {
+    margin-top: 60px;
+    padding: 16px 24px;
+    background: rgba(158,152,146,0.1);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--gray);
+    text-align: center;
+    font-style: italic;
+    border: 1px solid rgba(158,152,146,0.2);
+  }
+
+  canvas { max-height: 320px; }
+
+  /* ── MAP ── */
+  #map {
+    width: 100%;
+    height: 480px;
+    border-radius: 10px;
+    border: 1px solid var(--cream2);
+    box-shadow: 0 4px 20px rgba(13,27,42,0.1);
+    z-index: 1;
+  }
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    color: var(--navy);
+    background: white;
+    border: 1px solid var(--cream2);
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(13,27,42,0.15) !important;
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  .leaflet-popup-content {
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+    color: var(--navy) !important;
+    margin: 10px 14px !important;
+  }
+  .popup-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--navy);
+    margin-bottom: 3px;
+  }
+  .popup-dist { color: var(--amber); font-weight: 600; }
+
+  /* ── SCROLL ANIMATION ── */
+  .fade-in {
+    
+    
+    
+  }
+  
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="alianza">ALIANZA</div>
+    <div class="sub">Investimentos</div>
+    <div class="empr">
+      <strong>STAY TIBERY</strong>
+      Victria Construtora<br>
+      Uberlândia — MG<br>
+      CRI · Patrimônio de Afetação
+    </div>
+  </div>
+
+  <div class="nav-links">
+    <a class="nav-link active" href="#cidade" onclick="setActive(this)">
+      <span class="icon">🏙</span> Cidade
+    </a>
+    <a class="nav-link" href="#bairros" onclick="setActive(this)">
+      <span class="icon">🗺</span> Bairros
+    </a>
+    <a class="nav-link" href="#mercado" onclick="setActive(this)">
+      <span class="icon">📊</span> Mercado Imobiliário
+    </a>
+    <a class="nav-link" href="#infraestrutura" onclick="setActive(this)">
+      <span class="icon">🏗</span> Infraestrutura
+    </a>
+    <a class="nav-link" href="#mapa" onclick="setActive(this)">
+      <span class="icon">🗾</span> Mapa do Ativo
+    </a>
+  </div>
+
+  <div class="nav-footer">
+    CONFIDENCIAL — USO INTERNO<br>
+    Alianza Investimentos · Abril 2026
+  </div>
+</nav>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main>
+
+<!-- ══════════════════════════════════════
+     PÁGINA 1 — CIDADE
+══════════════════════════════════════ -->
+<section class="page" id="cidade">
+  <div class="page-header">
+    <div>
+      <div class="page-num">01 / 05 — Análise do Município</div>
+      <h1>Uberlândia<br><span>Minas Gerais</span></h1>
+    </div>
+    <div class="page-badge">Triângulo Mineiro</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid kpi-grid-5 fade-in">
+    <div class="kpi-card">
+      <div class="kpi-label">População Estimada</div>
+      <div class="kpi-value">761 k</div>
+      <div class="kpi-sub">IBGE 2025 · 2ª maior de MG</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">PIB per Capita</div>
+      <div class="kpi-value">R$ 71,6k</div>
+      <div class="kpi-sub">IBGE 2023 · 78% acima de MG</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">IDHM</div>
+      <div class="kpi-value">0,789</div>
+      <div class="kpi-sub">Alto · 3º em MG · 123º Brasil</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Área Territorial</div>
+      <div class="kpi-value">4.115</div>
+      <div class="kpi-sub">km² · IBGE 2024</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Área Urbanizada</div>
+      <div class="kpi-value">97%</div>
+      <div class="kpi-sub">Censo 2022 · Alta densidade</div>
+    </div>
+  </div>
+
+  <div class="two-col fade-in" style="margin-bottom:32px;">
+    <!-- Chart -->
+    <div class="chart-card">
+      <h3>Evolução Populacional (habitantes)</h3>
+      <canvas id="chartPop"></canvas>
+    </div>
+    <!-- Resumo -->
+    <div class="text-block">
+      <strong style="font-size:15px;display:block;margin-bottom:12px;color:var(--navy);">Perfil Econômico</strong>
+      Uberlândia é a <strong>2ª maior cidade de Minas Gerais</strong> e o <strong>27º maior PIB do Brasil</strong>, à frente de 16 capitais. Localizada no Triângulo Mineiro, a cidade é um dos principais <strong>hubs logísticos e de serviços</strong> do país, com posição estratégica entre São Paulo, Goiás, Mato Grosso do Sul e Brasília.<br><br>
+      A economia é liderada por <strong>serviços (56,5%)</strong>, seguida de indústria (31,2%), destacando-se no atacado distribuidor, logística, agronegócio processado e saúde de referência regional. O <strong>PIB industrial cresceu 764%</strong> entre 2002–2021, o maior crescimento entre cidades de grande porte do interior do Brasil.<br><br>
+      Em 2024, Uberlândia foi eleita <strong>6ª melhor cidade do Brasil em governança municipal</strong> (IGM/CFA), supera capitais como BH, Curitiba e São Paulo no ranking — e ostenta mais de 30 premiações nacionais consecutivas em qualidade de vida, saneamento e gestão.
+    </div>
+  </div>
+
+  <!-- Distances table -->
+  <div class="fade-in">
+    <div class="sec-title">Referências de Distância — Bairro Tibery</div>
+    <div class="chart-card" style="padding:0;overflow:hidden;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Referência</th>
+            <th>Distância</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge badge-amber">Shopping</span></td><td>Center Shopping Uberlândia</td><td><strong>~0,3 km</strong></td><td>300+ operações, maior da região</td></tr>
+          <tr><td><span class="badge badge-amber">Shopping</span></td><td>Pátio Sabiá</td><td><strong>~1,2 km</strong></td><td>Âncoras de alimentação e serviços</td></tr>
+          <tr><td><span class="badge badge-green">Lazer</span></td><td>Parque do Sabiá / Complexo Galassi</td><td><strong>~1,5 km</strong></td><td>Parque urbano de referência</td></tr>
+          <tr><td><span class="badge badge-green">Educação</span></td><td>Universidade Federal — UFU</td><td><strong>~2,0 km</strong></td><td>Campus Santa Mônica</td></tr>
+          <tr><td><span class="badge badge-red">Saúde</span></td><td>Hospital de Clínicas UFU</td><td><strong>~2,5 km</strong></td><td>Referência hospitalar regional</td></tr>
+          <tr><td><span class="badge badge-navy">Transporte</span></td><td>Terminal Central de Ônibus</td><td><strong>~3,5 km</strong></td><td>Linhas intermunicipais</td></tr>
+          <tr><td><span class="badge badge-navy">Transporte</span></td><td>Aeroporto Ten. Cel. Av. C. Penna</td><td><strong>~7,0 km</strong></td><td>Voos domésticos regulares</td></tr>
+          <tr><td><span class="badge badge-navy">Av. Estrutural</span></td><td>Av. Rondon Pacheco</td><td><strong>~0,8 km</strong></td><td>Principal eixo leste-oeste</td></tr>
+          <tr><td><span class="badge badge-navy">Av. Estrutural</span></td><td>Av. João Naves de Ávila</td><td><strong>~0,6 km</strong></td><td>Acesso rápido ao centro</td></tr>
+          <tr><td><span class="badge badge-navy">Bairro</span></td><td>Centro / Hipercentro</td><td><strong>~4,0 km</strong></td><td>Via Av. João Naves de Ávila</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PÁGINA 2 — BAIRROS
+══════════════════════════════════════ -->
+<section class="page" id="bairros">
+  <div class="page-header">
+    <div>
+      <div class="page-num">02 / 05 — Análise de Bairros</div>
+      <h1>Zona <span>Leste</span></h1>
+    </div>
+    <div class="page-badge">Região do Ativo</div>
+  </div>
+
+  <div class="two-col fade-in" style="margin-bottom:32px;">
+    <div class="chart-card">
+      <h3>Bairros Mais Populosos — Zona Leste (hab. aprox.)</h3>
+      <canvas id="chartBairrosPop"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Ranking Preço/m² por Bairro (R$/m²)</h3>
+      <canvas id="chartPrecos"></canvas>
+    </div>
+  </div>
+
+  <div class="sec-title fade-in">Perfil dos Bairros</div>
+
+  <div class="two-col fade-in" style="gap:16px;">
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:var(--navy);">
+        <h4>🏢 Tibery</h4>
+        <span class="badge badge-amber" style="background:rgba(201,168,76,0.2);color:var(--gold);">Ativo do CRI</span>
+      </div>
+      <div class="bairro-body">
+        Primeiro bairro formalmente designado de Uberlândia. Com mais de <strong>18 mil habitantes</strong>, concentra o Center Shopping (300+ operações), o Complexo Virgílio Galassi / Parque do Sabiá e infraestrutura corporativa de nível nacional (UBT, Center Office, Regus). Foco crescente de verticalização residencial, com demanda sustentada por <strong>+10.000 empregos</strong> gerados no entorno imediato.
+        <div class="bairro-meta">
+          <div class="meta-item">Preço/m²: <strong>R$ 6.200</strong></div>
+          <div class="meta-item">Aluguel 65m²: <strong>R$ 2.100/mês</strong></div>
+          <div class="meta-item">Liquidez: <strong>Média-Alta</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:#1a2e45;">
+        <h4>🏡 Santa Mônica</h4>
+        <span class="badge" style="background:rgba(255,255,255,0.15);color:#ccc;font-size:10px;">Premium</span>
+      </div>
+      <div class="bairro-body">
+        Maior bairro de Uberlândia, com <strong>~45 mil habitantes</strong>. Perfil residencial de médio-alto padrão, forte oferta de escolas, comércio e serviços especializados. Os maiores preços/m² da zona leste refletem a consolidação como bairro nobre. Boa liquidez para imóveis de 2–3 quartos com lazer completo.
+        <div class="bairro-meta">
+          <div class="meta-item">Preço/m²: <strong>R$ 8.500</strong></div>
+          <div class="meta-item">Yield: <strong>4,2% a.a.</strong></div>
+          <div class="meta-item">Liquidez: <strong>Média</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:var(--amber);">
+        <h4>🏘 Brasil</h4>
+        <span class="badge" style="background:rgba(255,255,255,0.2);color:white;font-size:10px;">Médio Padrão</span>
+      </div>
+      <div class="bairro-body">
+        Bairro central-leste, sede da Victria Construtora. Perfil comercial e residencial misto com boa serventia de transporte público. Mercado com <strong>alta liquidez</strong> e preços moderados. Processo de verticalização em curso — empreendimentos medianos têm boa absorção.
+        <div class="bairro-meta">
+          <div class="meta-item">Preço/m²: <strong>R$ 5.500</strong></div>
+          <div class="meta-item">Yield: <strong>6,0% a.a.</strong></div>
+          <div class="meta-item">Liquidez: <strong>Alta</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:var(--green);">
+        <h4>📍 Custódio Pereira</h4>
+        <span class="badge" style="background:rgba(255,255,255,0.2);color:white;font-size:10px;">Acessível</span>
+      </div>
+      <div class="bairro-body">
+        Bairro mais acessível do grupo, com perfil de classe média emergente e forte demanda de estudantes da UFU. Boa proximidade com vias estruturais. Potencial de valorização ligado ao crescimento do eixo leste. <strong>Alta liquidez</strong> para imóveis de 1–2 quartos.
+        <div class="bairro-meta">
+          <div class="meta-item">Preço/m²: <strong>R$ 4.800</strong></div>
+          <div class="meta-item">Yield: <strong>6,0% a.a.</strong></div>
+          <div class="meta-item">Liquidez: <strong>Alta</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bairro-card" style="grid-column:1/-1;">
+      <div class="bairro-header" style="background:var(--red);">
+        <h4>💎 Jardim Karaíba</h4>
+        <span class="badge" style="background:rgba(255,255,255,0.2);color:white;font-size:10px;">Alto Padrão</span>
+      </div>
+      <div class="bairro-body">
+        Bairro premium da zona leste, com os maiores tickets/m² da região. Perfil de alto padrão com grandes lotes, imóveis sofisticados e baixa verticalização. Liquidez mais lenta pelo ticket elevado — mercado direcionado a famílias de alta renda. Poucas opções de novos lançamentos verticais, o que reduz concorrência mas também limita o público comprador.
+        <div class="bairro-meta">
+          <div class="meta-item">Preço/m²: <strong>R$ 7.500</strong></div>
+          <div class="meta-item">Yield: <strong>4,5% a.a.</strong></div>
+          <div class="meta-item">Liquidez: <strong>Média</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PÁGINA 3 — MERCADO IMOBILIÁRIO
+══════════════════════════════════════ -->
+<section class="page" id="mercado">
+  <div class="page-header">
+    <div>
+      <div class="page-num">03 / 05 — Mercado Imobiliário</div>
+      <h1>Mercado <span>Residencial</span></h1>
+    </div>
+    <div class="page-badge">Tibery e Entorno</div>
+  </div>
+
+  <div class="kpi-grid kpi-grid-4 fade-in">
+    <div class="kpi-card">
+      <div class="kpi-label">Ticket Médio</div>
+      <div class="kpi-value">R$ 370k</div>
+      <div class="kpi-sub">Apto 2Q · Tibery</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Aluguel Médio</div>
+      <div class="kpi-value">R$ 2.100</div>
+      <div class="kpi-sub">Apto 65m² / mês</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Yield Bruto Est.</div>
+      <div class="kpi-value">6,8% a.a.</div>
+      <div class="kpi-sub">Acima do benchmark prime (4–5%)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Vacância Estimada</div>
+      <div class="kpi-value">~5%</div>
+      <div class="kpi-sub">Mercado aquecido (limiar 5%)</div>
+    </div>
+  </div>
+
+  <div class="two-col fade-in" style="margin-bottom:32px;">
+    <div class="chart-card">
+      <h3>Tempo Médio Anúncio → Locação por Bairro (dias)</h3>
+      <canvas id="chartTempo"></canvas>
+    </div>
+    <div>
+      <div class="sec-title" style="font-size:15px;">Análise de Liquidez — Tibery</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="factor-card">
+          <h4>⚡ Absorção</h4>
+          <p>Mercado ativo com boa velocidade de locação (~25 dias médios). Tibery possui ~173 anúncios ativos de venda e 55 de aluguel em circulação simultânea (Imovelweb / QuintoAndar), indicando giro satisfatório.</p>
+        </div>
+        <div class="factor-card">
+          <h4>🎓 Demanda Estrutural</h4>
+          <p>Proximidade com UFU, Center Shopping e polos corporativos gera demanda permanente de estudantes, executivos e profissionais de saúde — base de locação com baixa sazonalidade.</p>
+        </div>
+        <div class="factor-card">
+          <h4>📈 Yield Premium</h4>
+          <p>Yield bruto estimado de <strong>6,8% a.a.</strong> supera o benchmark residencial prime (4–5%). Indica que Tibery entrega rentabilidade de locação acima da média para imóveis novos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title fade-in">Tabela Comparativa por Bairro</div>
+  <div class="chart-card fade-in" style="padding:0;overflow:hidden;margin-bottom:32px;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Bairro</th>
+          <th>Preço Venda/m²</th>
+          <th>Aluguel 100m²/mês</th>
+          <th>Yield Bruto</th>
+          <th>T. Locação (dias)</th>
+          <th>Liquidez</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Custódio Pereira</td><td>R$ 4.800</td><td>R$ 2.400</td><td>6,0% a.a.</td><td>18</td><td><span class="badge badge-green">Alta</span></td></tr>
+        <tr><td>Brasil</td><td>R$ 5.500</td><td>R$ 2.750</td><td>6,0% a.a.</td><td>22</td><td><span class="badge badge-green">Alta</span></td></tr>
+        <tr style="background:rgba(201,168,76,0.08);font-weight:600;"><td>⭐ Tibery (ativo)</td><td>R$ 6.200</td><td>R$ 2.600</td><td>5,0% a.a.</td><td>25</td><td><span class="badge badge-amber">Média-Alta</span></td></tr>
+        <tr><td>Jardim Karaíba</td><td>R$ 7.500</td><td>R$ 2.800</td><td>4,5% a.a.</td><td>31</td><td><span class="badge badge-amber">Média</span></td></tr>
+        <tr><td>Santa Mônica</td><td>R$ 8.500</td><td>R$ 3.000</td><td>4,2% a.a.</td><td>48</td><td><span class="badge badge-amber">Média</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec-title fade-in">Fatores de Liquidez</div>
+  <div class="two-col fade-in">
+    <div class="factor-card">
+      <h4>🏢 Polo Corporativo</h4>
+      <p>O Complexo Center Shopping / UBT concentra mais de 10.000 empregos diretos e 80 empresas nacionais e multinacionais, sustentando demanda permanente por locação residencial no entorno imediato.</p>
+    </div>
+    <div class="factor-card">
+      <h4>🛣 Infraestrutura Viária</h4>
+      <p>Servido pelas avenidas Rondon Pacheco, João Naves de Ávila e Anselmo Alves dos Santos — as três principais vias estruturais de Uberlândia — garantindo conectividade com toda a cidade.</p>
+    </div>
+    <div class="factor-card">
+      <h4>🎓 Eixo Universitário</h4>
+      <p>A UFU e outras IES no raio de 2–3 km geram fluxo constante de estudantes, base sólida para studios e aptos de 1–2 quartos — perfil típico de empreendimentos de renda compacta.</p>
+    </div>
+    <div class="factor-card">
+      <h4>⚠️ Risco: Pipeline</h4>
+      <p>Crescente pipeline de lançamentos verticais no bairro. Monitorar ritmo de absorção vs. novos lançamentos para antecipar eventual pressão sobre vacância e preços de locação no médio prazo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PÁGINA 4 — INFRAESTRUTURA
+══════════════════════════════════════ -->
+<section class="page" id="infraestrutura">
+  <div class="page-header">
+    <div>
+      <div class="page-num">04 / 05 — Infraestrutura Urbana</div>
+      <h1>Infra<span>estrutura</span></h1>
+    </div>
+    <div class="page-badge">Raio de Influência</div>
+  </div>
+
+  <div class="three-col fade-in" style="margin-bottom:24px;">
+    <div class="infra-cat">
+      <div class="infra-cat-header">🚗 Mobilidade</div>
+      <div class="infra-item"><span class="infra-name">Av. João Naves de Ávila</span><span class="infra-dist">~0,6 km</span></div>
+      <div class="infra-item"><span class="infra-name">Terminal Tibery (ônibus)</span><span class="infra-dist">~0,5 km</span></div>
+      <div class="infra-item"><span class="infra-name">Av. Rondon Pacheco</span><span class="infra-dist">~0,8 km</span></div>
+      <div class="infra-item"><span class="infra-name">Aeroporto C. Penna</span><span class="infra-dist">~7,0 km</span></div>
+    </div>
+    <div class="infra-cat">
+      <div class="infra-cat-header">🏥 Saúde</div>
+      <div class="infra-item"><span class="infra-name">UPA Tibery</span><span class="infra-dist">~1,0 km</span></div>
+      <div class="infra-item"><span class="infra-name">Hospital de Clínicas UFU</span><span class="infra-dist">~2,5 km</span></div>
+      <div class="infra-item"><span class="infra-name">Santa Casa de Uberlândia</span><span class="infra-dist">~4,0 km</span></div>
+      <div class="infra-item"><span class="infra-name">Farmácias / Clínicas</span><span class="infra-dist">~0,3 km</span></div>
+    </div>
+    <div class="infra-cat">
+      <div class="infra-cat-header">🎓 Educação</div>
+      <div class="infra-item"><span class="infra-name">UFU — Campus Santa Mônica</span><span class="infra-dist">~2,0 km</span></div>
+      <div class="infra-item"><span class="infra-name">IFTM — Instituto Federal</span><span class="infra-dist">~3,0 km</span></div>
+      <div class="infra-item"><span class="infra-name">Col. Estadual Tibery</span><span class="infra-dist">~0,5 km</span></div>
+      <div class="infra-item"><span class="infra-name">UBT Business Tower</span><span class="infra-dist">~0,4 km</span></div>
+    </div>
+  </div>
+
+  <div class="two-col fade-in" style="margin-bottom:32px;">
+    <div class="infra-cat">
+      <div class="infra-cat-header">🛍 Comércio</div>
+      <div class="infra-item"><span class="infra-name">Center Shopping (300+ lojas)</span><span class="infra-dist">~0,3 km</span></div>
+      <div class="infra-item"><span class="infra-name">Pátio Sabiá</span><span class="infra-dist">~1,2 km</span></div>
+      <div class="infra-item"><span class="infra-name">Supermercado BH / ABC</span><span class="infra-dist">~0,4 km</span></div>
+      <div class="infra-item"><span class="infra-name">Carrefour Rondon Pacheco</span><span class="infra-dist">~2,0 km</span></div>
+    </div>
+    <div class="infra-cat">
+      <div class="infra-cat-header">🌳 Cultura & Lazer</div>
+      <div class="infra-item"><span class="infra-name">Parque do Sabiá / Galassi</span><span class="infra-dist">~1,5 km</span></div>
+      <div class="infra-item"><span class="infra-name">Praça Renato H. Calcagno</span><span class="infra-dist">~0,6 km</span></div>
+      <div class="infra-item"><span class="infra-name">Estádio Airton Borges</span><span class="infra-dist">~1,0 km</span></div>
+      <div class="infra-item"><span class="infra-name">Teatro Municipal Rondon P.</span><span class="infra-dist">~4,5 km</span></div>
+    </div>
+  </div>
+
+  <!-- Synthesis -->
+  <div class="synthesis-box fade-in">
+    <h3>Síntese do Endereço — STAY TIBERY | Bairro Tibery, Uberlândia/MG</h3>
+    <p>
+      O empreendimento <strong style="color:var(--gold);">STAY TIBERY</strong>, incorporado pela Victria Construtora & Incorporadora sob patrimônio de afetação (matrícula 282.879 — 1º Ofício de RI de Uberlândia), está inserido no <strong style="color:white;">Bairro Tibery, zona leste de Uberlândia/MG</strong> — o primeiro bairro formalmente designado da cidade e um dos mais estratégicos da região.
+      <br><br>
+      A localização combina <strong style="color:var(--gold);">proximidade imediata com o Center Shopping</strong> (~0,3 km, maior da região), o Complexo Virgílio Galassi / Parque do Sabiá e as principais avenidas estruturais da cidade. O bairro concentra infraestrutura corporativa de alto nível — UBT, Center Office, Regus — que gera mais de <strong style="color:white;">10.000 empregos diretos</strong>, sustentando demanda habitacional permanente de executivos, estudantes e profissionais de saúde.
+      <br><br>
+      A estrutura de <strong style="color:var(--gold);">patrimônio de afetação e CRI</strong> confere segurança jurídica reforçada: receitas vinculadas exclusivamente à conclusão do empreendimento, comissão de representantes dos adquirentes com controle financeiro e vedação expressa de desvio de recursos. O imóvel objeto da incorporação foi declarado livre de ônus reais, fiscais e judiciais.
+    </p>
+  </div>
+
+  <div class="aviso fade-in">
+    ⚠️ Esta análise é de caráter informativo e não substitui due diligence completa nem constitui recomendação de investimento. Dados de mercado com base em fontes públicas disponíveis em abril/2026.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PÁGINA 5 — MAPA DO ATIVO
+══════════════════════════════════════ -->
+<section class="page" id="mapa">
+  <div class="page-header">
+    <div>
+      <div class="page-num">05 / 05 — Localização</div>
+      <h1>Mapa do <span>Ativo</span></h1>
+    </div>
+    <div class="page-badge">STAY TIBERY — Delta Sul</div>
+  </div>
+
+  <!-- Address strip -->
+  <div class="fade-in" style="display:flex;align-items:center;gap:16px;margin-bottom:24px;background:var(--navy);border-radius:8px;padding:16px 22px;">
+    <span style="font-size:22px;">📍</span>
+    <div>
+      <div style="color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:3px;">Endereço do Empreendimento</div>
+      <div style="color:white;font-size:15px;font-weight:600;">Rua Rafael Marinho Neto, 135 — Bairro Delta Sul</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:2px;">Uberlândia — MG · CEP 38411-186 · Matrícula 282.879</div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="fade-in">
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#C9A84C;border:2px solid #0D1B2A;"></div> STAY TIBERY (ativo)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#922620;"></div> Shopping / Comércio</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1F6B42;"></div> Lazer / Parques</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#0D1B2A;"></div> Educação / Saúde</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#B8711A;"></div> Vias Estruturais</div>
+    </div>
+  </div>
+
+  <!-- Context cards below map -->
+  <div class="three-col fade-in" style="margin-top:28px;">
+    <div class="factor-card">
+      <h4>📌 Posicionamento</h4>
+      <p>O empreendimento está no bairro Delta Sul / Jardim Karaíba, zona sul de Uberlândia — região premium com os maiores preços/m² da cidade e crescente valorização imobiliária.</p>
+    </div>
+    <div class="factor-card">
+      <h4>🛣 Acessibilidade</h4>
+      <p>Acesso direto às Avenidas Rondon Pacheco e João Naves de Ávila. Raio de 5 km cobre o Center Shopping, UFU, Hospital de Clínicas e o centro de Uberlândia.</p>
+    </div>
+    <div class="factor-card">
+      <h4>🏗 Patrimônio de Afetação</h4>
+      <p>Matrícula 282.879 averbada no 1º Ofício de RI. Imóvel declarado livre de ônus reais, fiscais e judiciais. Regime de afetação garante segregação patrimonial total.</p>
+    </div>
+  </div>
+
+  <div class="aviso fade-in">
+    ⚠️ Esta análise é de caráter informativo e não substitui due diligence completa nem constitui recomendação de investimento. Dados de mercado com base em fontes públicas disponíveis em abril/2026.
+  </div>
+</section>
+
+</main>
+
+<script>
+// ── Leaflet Map ───────────────────────────────────────────────────────
+const LAT = -18.9513895, LNG = -48.2611018;
+
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: false }).setView([LAT, LNG], 14);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO',
+  maxZoom: 19,
+}).addTo(map);
+
+// Custom icon factory
+function makeIcon(color, size=18) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:${size}px;height:${size}px;border-radius:50%;
+      background:${color};border:3px solid white;
+      box-shadow:0 2px 8px rgba(0,0,0,0.35);
+    "></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -(size/2+4)],
+  });
+}
+
+function makeStarIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:28px;height:28px;border-radius:50%;
+      background:#C9A84C;border:3px solid #0D1B2A;
+      box-shadow:0 3px 12px rgba(0,0,0,0.4);
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;
+    ">📍</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -18],
+  });
+}
+
+// Main pin — STAY TIBERY
+L.marker([LAT, LNG], { icon: makeStarIcon(), zIndexOffset: 1000 })
+  .addTo(map)
+  .bindPopup(`
+    <div class="popup-title">⭐ STAY TIBERY</div>
+    Rua Rafael Marinho Neto, 135<br>
+    Bairro Delta Sul — Uberlândia/MG<br>
+    <span class="popup-dist">Patrimônio de Afetação · Matrícula 282.879</span>
+  `)
+  .openPopup();
+
+// Points of interest
+const pois = [
+  { lat:-18.9180, lng:-48.2730, color:'#922620', name:'Center Shopping Uberlândia', dist:'~4,5 km', cat:'Shopping' },
+  { lat:-18.9260, lng:-48.2660, color:'#922620', name:'Pátio Sabiá',                dist:'~3,8 km', cat:'Shopping' },
+  { lat:-18.9230, lng:-48.2590, color:'#1F6B42', name:'Parque do Sabiá / Galassi',  dist:'~3,0 km', cat:'Lazer' },
+  { lat:-18.9190, lng:-48.2480, color:'#0D1B2A', name:'UFU — Campus Santa Mônica',  dist:'~3,8 km', cat:'Educação' },
+  { lat:-18.9210, lng:-48.2510, color:'#0D1B2A', name:'Hospital de Clínicas UFU',   dist:'~3,5 km', cat:'Saúde' },
+  { lat:-18.9340, lng:-48.2700, color:'#B8711A', name:'Av. Rondon Pacheco',         dist:'~2,0 km', cat:'Via' },
+  { lat:-18.9480, lng:-48.2480, color:'#B8711A', name:'Av. João Naves de Ávila',    dist:'~1,5 km', cat:'Via' },
+];
+
+pois.forEach(p => {
+  L.marker([p.lat, p.lng], { icon: makeIcon(p.color) })
+    .addTo(map)
+    .bindPopup(`
+      <div class="popup-title">${p.name}</div>
+      <span style="color:#9E9892;font-size:11px;">${p.cat}</span><br>
+      <span class="popup-dist">${p.dist} do empreendimento</span>
+    `);
+});
+
+// Influence radius circle
+L.circle([LAT, LNG], {
+  radius: 2000,
+  color: '#C9A84C',
+  fillColor: '#C9A84C',
+  fillOpacity: 0.05,
+  weight: 1.5,
+  dashArray: '6 4',
+}).addTo(map).bindPopup('Raio de 2 km de influência');
+
+function setActive(el) {
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const sections = document.querySelectorAll('section.page');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.35 });
+
+sections.forEach(s => observer.observe(s));
+
+// ── Fade in on scroll ─────────────────────────────────────────────────
+const fadeEls = document.querySelectorAll('.fade-in');
+const fadeObs = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 60);
+    }
+  });
+}, { threshold: 0.1 });
+fadeEls.forEach(el => fadeObs.observe(el));
+
+// ── Chart: Population ─────────────────────────────────────────────────
+new Chart(document.getElementById('chartPop'), {
+  type: 'line',
+  data: {
+    labels: ['2019','2020','2021','2022','2023','2025'],
+    datasets: [{
+      label: 'Habitantes',
+      data: [691305, 706597, 706597, 713224, 736965, 761835],
+      borderColor: '#C9A84C',
+      backgroundColor: 'rgba(201,168,76,0.08)',
+      borderWidth: 2.5,
+      pointBackgroundColor: '#0D1B2A',
+      pointBorderColor: '#C9A84C',
+      pointBorderWidth: 2,
+      pointRadius: 5,
+      fill: true,
+      tension: 0.35,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        ticks: {
+          callback: v => (v/1000).toFixed(0) + 'k',
+          font: { size: 11 },
+          color: '#9E9892',
+        },
+        grid: { color: 'rgba(0,0,0,0.05)' },
+      },
+      x: { ticks: { font: { size: 11 }, color: '#9E9892' }, grid: { display: false } }
+    }
+  }
+});
+
+// ── Chart: Bairros Pop ────────────────────────────────────────────────
+new Chart(document.getElementById('chartBairrosPop'), {
+  type: 'bar',
+  data: {
+    labels: ['Santa Mônica','Tibery','Custódio Pereira','Jardim Karaíba','Brasil'],
+    datasets: [{
+      data: [45000, 18500, 16000, 14500, 13000],
+      backgroundColor: ['#0D1B2A','#C9A84C','#1F6B42','#B8711A','#152233'],
+      borderRadius: 5,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        ticks: { callback: v => (v/1000).toFixed(0)+'k', font:{size:11}, color:'#9E9892' },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      },
+      y: { ticks: { font:{size:11}, color:'#0D1B2A' }, grid:{ display:false } }
+    }
+  }
+});
+
+// ── Chart: Preços ─────────────────────────────────────────────────────
+new Chart(document.getElementById('chartPrecos'), {
+  type: 'bar',
+  data: {
+    labels: ['Custódio Pereira','Brasil','Tibery','Jardim Karaíba','Santa Mônica'],
+    datasets: [{
+      data: [4800, 5500, 6200, 7500, 8500],
+      backgroundColor: ['#1F6B42','#1F6B42','#C9A84C','#B8711A','#922620'],
+      borderRadius: 5,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend:{ display:false } },
+    scales: {
+      x: {
+        ticks: { callback: v => 'R$'+v.toLocaleString('pt-BR'), font:{size:10}, color:'#9E9892' },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      },
+      y: { ticks: { font:{size:11}, color:'#0D1B2A' }, grid:{ display:false } }
+    }
+  }
+});
+
+// ── Chart: Tempo Locação ──────────────────────────────────────────────
+new Chart(document.getElementById('chartTempo'), {
+  type: 'bar',
+  data: {
+    labels: ['Custódio Pereira','Brasil','Tibery','Santa Mônica','Jardim Karaíba'],
+    datasets: [{
+      data: [18, 22, 25, 31, 48],
+      backgroundColor: ctx => {
+        const v = ctx.raw;
+        if (v <= 20) return '#1F6B42';
+        if (v <= 30) return '#C9A84C';
+        return '#922620';
+      },
+      borderRadius: 5,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend:{ display:false } },
+    scales: {
+      x: {
+        ticks: { callback: v => v+'d', font:{size:11}, color:'#9E9892' },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      },
+      y: { ticks:{ font:{size:11}, color:'#0D1B2A' }, grid:{ display:false } }
+    }
+  }
+});
+</script>
+</body>
+</html>
