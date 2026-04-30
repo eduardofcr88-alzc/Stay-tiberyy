@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAY TIBERY — Análise de Ativo | Alianza Investimentos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{--navy:#0D1B2A;--navy2:#152233;--gold:#C9A84C;--gold2:#E8C96A;--cream:#F7F3EC;--cream2:#EDE8DF;--gray:#9E9892;--green:#1F6B42;--amber:#B8711A;--red:#922620;--white:#FFFFFF;--sidebar-w:220px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);display:flex;min-height:100vh}
+nav#sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--navy);display:flex;flex-direction:column;z-index:100;border-right:1px solid rgba(201,168,76,.2)}
+.nav-brand{padding:24px 22px 18px;border-bottom:1px solid rgba(201,168,76,.2)}
+.nav-brand .alianza{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--gold);letter-spacing:2px;line-height:1}
+.nav-brand .sub{font-size:9px;color:var(--gray);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+.nav-brand .empr{margin-top:12px;font-size:11px;color:rgba(255,255,255,.7);line-height:1.5}
+.nav-brand .empr strong{color:var(--gold2);font-weight:600;display:block;font-size:12px}
+.nav-links{flex:1;padding:20px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-link{display:flex;align-items:center;gap:10px;padding:10px 22px;color:rgba(255,255,255,.55);text-decoration:none;font-size:12px;font-weight:500;transition:all .2s;border-left:3px solid transparent}
+.nav-link:hover{color:var(--gold);background:rgba(201,168,76,.06)}
+.nav-link.active{color:var(--gold);background:rgba(201,168,76,.1);border-left-color:var(--gold)}
+.nav-link .icon{font-size:13px;width:18px;text-align:center}
+.nav-footer{padding:14px 22px;border-top:1px solid rgba(201,168,76,.15);font-size:9px;color:rgba(255,255,255,.3);line-height:1.6}
+main{margin-left:var(--sidebar-w);flex:1;min-height:100vh}
+section.page{min-height:100vh;padding:52px 48px;border-bottom:1px solid var(--cream2)}
+section.page:nth-child(even){background:var(--white)}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;padding-bottom:18px;border-bottom:1px solid var(--cream2)}
+.page-header h1{font-family:'Playfair Display',serif;font-size:34px;font-weight:900;color:var(--navy);line-height:1.1}
+.page-header h1 span{color:var(--gold)}
+.page-num{font-size:11px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.page-badge{background:var(--navy);color:var(--gold);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:2px;border:1px solid rgba(201,168,76,.3);white-space:nowrap}
+.kpi-grid{display:grid;gap:14px;margin-bottom:32px}
+.kpi-grid-5{grid-template-columns:repeat(5,1fr)}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr)}
+.kpi-card{background:var(--navy);border-radius:8px;padding:18px 14px 14px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold)}
+.kpi-card .kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:600}
+.kpi-card .kpi-value{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--white);line-height:1}
+.kpi-card .kpi-sub{font-size:10px;color:var(--gray);margin-top:6px}
+.sec-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--cream2)}
+.chart-card{background:var(--white);border-radius:8px;padding:22px;border:1px solid var(--cream2);box-shadow:0 2px 12px rgba(13,27,42,.05)}
+.chart-card h3{font-size:11px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--cream2)}
+canvas{max-height:300px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.text-block{background:var(--cream);border-radius:8px;padding:22px;line-height:1.8;font-size:13px;color:#2a2a2a;border-left:4px solid var(--gold)}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table thead tr{background:var(--navy);color:var(--gold)}
+.data-table thead th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.data-table tbody tr:nth-child(odd){background:var(--cream)}
+.data-table tbody tr:nth-child(even){background:var(--white)}
+.data-table tbody tr:hover{background:rgba(201,168,76,.08)}
+.data-table tbody td{padding:9px 12px;color:var(--navy);border-bottom:1px solid var(--cream2)}
+.data-table tbody td:first-child{font-weight:500}
+.highlight-row{background:rgba(201,168,76,.1) !important;font-weight:600}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-green{background:rgba(31,107,66,.12);color:var(--green)}
+.badge-amber{background:rgba(184,113,26,.12);color:var(--amber)}
+.badge-red{background:rgba(146,38,32,.12);color:var(--red)}
+.badge-navy{background:rgba(13,27,42,.08);color:var(--navy)}
+.badge-gold{background:rgba(201,168,76,.15);color:#8a6a20}
+.bairro-card{border-radius:8px;overflow:hidden;border:1px solid var(--cream2)}
+.bairro-card .bairro-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;color:white}
+.bairro-card .bairro-header h4{font-size:13px;font-weight:700}
+.bairro-card .bairro-body{padding:14px 16px;background:white;font-size:12px;line-height:1.7;color:#333}
+.bairro-card .bairro-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.bairro-card .meta-item{font-size:10px;color:var(--gray)}
+.bairro-card .meta-item strong{color:var(--navy);font-size:11px}
+.infra-cat{border-radius:8px;overflow:hidden;border:1px solid var(--cream2)}
+.infra-cat-header{padding:11px 14px;background:var(--navy);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.infra-item{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;font-size:12px;border-bottom:1px solid var(--cream2);background:white}
+.infra-item:last-child{border-bottom:none}
+.infra-item:nth-child(odd){background:var(--cream)}
+.infra-item .infra-dist{color:var(--amber);font-weight:700;font-size:11px;background:rgba(184,113,26,.1);padding:2px 8px;border-radius:20px}
+.factor-card{background:white;border:1px solid var(--cream2);border-radius:8px;padding:18px;border-top:3px solid var(--gold)}
+.factor-card h4{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:7px}
+.factor-card p{font-size:12px;color:#444;line-height:1.7}
+.synthesis-box{background:var(--navy);border-radius:10px;padding:28px 32px;color:white;position:relative;overflow:hidden;margin-top:36px}
+.synthesis-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.synthesis-box h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);margin-bottom:14px;letter-spacing:1px}
+.synthesis-box p{font-size:12.5px;line-height:1.85;color:rgba(255,255,255,.82)}
+#map{width:100%;height:460px;border-radius:10px;border:1px solid var(--cream2);box-shadow:0 4px 20px rgba(13,27,42,.1);z-index:1}
+.map-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--navy);background:white;border:1px solid var(--cream2);padding:4px 10px;border-radius:20px}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.leaflet-popup-content-wrapper{border-radius:8px !important;font-family:'DM Sans',sans-serif !important}
+.leaflet-popup-content{font-size:12px !important;line-height:1.6 !important;margin:10px 12px !important}
+.aviso{margin-top:48px;padding:14px 22px;background:rgba(158,152,146,.1);border-radius:6px;font-size:11px;color:var(--gray);text-align:center;font-style:italic;border:1px solid rgba(158,152,146,.2)}
+.addr-strip{display:flex;align-items:center;gap:14px;margin-bottom:22px;background:var(--navy);border-radius:8px;padding:14px 20px}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="alianza">ALIANZA</div>
+    <div class="sub">Investimentos</div>
+    <div class="empr"><strong>STAY TIBERY</strong>Victria Construtora<br>Uberlândia — MG<br>CRI · Patrimônio de Afetação</div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#cidade"><span class="icon">🏙</span> Cidade</a>
+    <a class="nav-link" href="#bairros"><span class="icon">🗺</span> Bairros</a>
+    <a class="nav-link" href="#mercado"><span class="icon">📊</span> Mercado Imobiliário</a>
+    <a class="nav-link" href="#concorrencia"><span class="icon">🏢</span> Análise Concorrencial</a>
+    <a class="nav-link" href="#infraestrutura"><span class="icon">🏗</span> Infraestrutura</a>
+    <a class="nav-link" href="#mapa"><span class="icon">🗾</span> Mapa do Ativo</a>
+  </div>
+  <div class="nav-footer">CONFIDENCIAL — USO INTERNO<br>Alianza Investimentos · Abril 2026</div>
+</nav>
+
+<main>
+
+<!-- 1. CIDADE -->
+<section class="page" id="cidade">
+  <div class="page-header">
+    <div><div class="page-num">01 / 06 — Análise do Município</div><h1>Uberlândia<br><span>Minas Gerais</span></h1></div>
+    <div class="page-badge">Triângulo Mineiro</div>
+  </div>
+  <div class="kpi-grid kpi-grid-5">
+    <div class="kpi-card"><div class="kpi-label">População Estimada</div><div class="kpi-value">761 k</div><div class="kpi-sub">IBGE 2025 · 2ª maior de MG</div></div>
+    <div class="kpi-card"><div class="kpi-label">PIB per Capita</div><div class="kpi-value">R$ 71,6k</div><div class="kpi-sub">IBGE 2023 · 78% acima de MG</div></div>
+    <div class="kpi-card"><div class="kpi-label">IDHM</div><div class="kpi-value">0,789</div><div class="kpi-sub">Alto · 3º em MG · 123º Brasil</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Territorial</div><div class="kpi-value">4.115</div><div class="kpi-sub">km² · IBGE 2024</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Urbanizada</div><div class="kpi-value">97%</div><div class="kpi-sub">Censo 2022</div></div>
+  </div>
+  <div class="two-col" style="margin-bottom:28px">
+    <div class="chart-card"><h3>Evolução Populacional (habitantes)</h3><canvas id="chartPop"></canvas></div>
+    <div class="text-block">
+      <strong style="font-size:14px;display:block;margin-bottom:10px">Perfil Econômico</strong>
+      Uberlândia é a <strong>2ª maior cidade de Minas Gerais</strong> e o <strong>27º maior PIB do Brasil</strong>, à frente de 16 capitais. Localizada no Triângulo Mineiro, é hub logístico e de serviços entre SP, GO, MS e Brasília.<br><br>
+      A economia é liderada por <strong>serviços (56,5%)</strong>, seguida de indústria (31,2%). O <strong>PIB industrial cresceu 764%</strong> entre 2002–2021 — o maior crescimento entre cidades de grande porte do interior do Brasil. Possui 242 mil empregos formais e saldo positivo de admissões em 2024.<br><br>
+      Em 2024, foi eleita <strong>6ª em governança municipal no Brasil</strong> (IGM/CFA), superando BH, Curitiba e São Paulo — com mais de 30 premiações nacionais consecutivas em qualidade de vida, saneamento e gestão pública.
+    </div>
+  </div>
+  <div class="sec-title">Referências de Distância — Delta Sul / Jardim Karaíba</div>
+  <div class="chart-card" style="padding:0;overflow:hidden">
+    <table class="data-table">
+      <thead><tr><th>Categoria</th><th>Referência</th><th>Distância</th><th>Observação</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-amber">Shopping</span></td><td>Uberlândia Shopping</td><td><strong>~1,5 km</strong></td><td>Âncoras nacionais, lazer e serviços</td></tr>
+        <tr><td><span class="badge badge-amber">Shopping</span></td><td>Center Shopping Uberlândia</td><td><strong>~4,5 km</strong></td><td>300+ operações, maior da região leste</td></tr>
+        <tr><td><span class="badge badge-green">Lazer</span></td><td>Parque da Gávea</td><td><strong>~1,0 km</strong></td><td>Principal área verde da zona sul</td></tr>
+        <tr><td><span class="badge badge-green">Lazer</span></td><td>Praia Clube</td><td><strong>~3,0 km</strong></td><td>301 mil m² — clube referência da cidade</td></tr>
+        <tr><td><span class="badge badge-navy">Educação</span></td><td>UFU — Campus Santa Mônica</td><td><strong>~5,0 km</strong></td><td>Maior universidade federal do interior</td></tr>
+        <tr><td><span class="badge badge-navy">Educação</span></td><td>Faculdade Anhanguera</td><td><strong>~2,0 km</strong></td><td>Campus Morada da Colina</td></tr>
+        <tr><td><span class="badge badge-red">Saúde</span></td><td>UMC — Uberlândia Medical Center</td><td><strong>~0,8 km</strong></td><td>Complexo de saúde privado de referência</td></tr>
+        <tr><td><span class="badge badge-red">Saúde</span></td><td>Hospital Santa Marta</td><td><strong>~2,5 km</strong></td><td>Referência hospitalar zona sul</td></tr>
+        <tr><td><span class="badge badge-navy">Via Estrutural</span></td><td>Av. Nicomedes Alves dos Santos</td><td><strong>~0,5 km</strong></td><td>Principal eixo da zona sul</td></tr>
+        <tr><td><span class="badge badge-navy">Via Estrutural</span></td><td>Av. Rondon Pacheco</td><td><strong>~2,0 km</strong></td><td>Eixo leste-oeste da cidade</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 2. BAIRROS -->
+<section class="page" id="bairros">
+  <div class="page-header">
+    <div><div class="page-num">02 / 06 — Análise de Bairros</div><h1>Zona Sul <span>& Leste</span></h1></div>
+    <div class="page-badge">Região do Ativo</div>
+  </div>
+  <div class="two-col" style="margin-bottom:28px">
+    <div class="chart-card"><h3>Volume de Anúncios de Venda por Bairro (unidades ativas)</h3><canvas id="chartBairrosPop"></canvas></div>
+    <div class="chart-card"><h3>Preço Médio/m² por Bairro — Novos (R$/m²)</h3><canvas id="chartPrecos"></canvas></div>
+  </div>
+  <div class="sec-title">Perfil Detalhado dos Bairros</div>
+  <div class="two-col" style="gap:14px">
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:var(--navy)"><h4>⭐ Delta Sul / Jardim Karaíba</h4><span class="badge badge-gold">ATIVO DO CRI</span></div>
+      <div class="bairro-body">Região premium da zona sul, com os maiores tickets/m² de Uberlândia (R$ 9.500–14.000/m²). Concentra empreendimentos da Brasal (Triad, DUO, Arven) com metragens entre 108m² e 453m². Crescimento acelerado de verticais desde 2015. Proximidade com Uberlândia Shopping, Parque da Gávea e Praia Clube confere diferencial de qualidade de vida. <strong>Região mais valorizada da cidade</strong>, com pipeline ativo de incorporadoras nacionais validando o endereço.
+        <div class="bairro-meta"><div class="meta-item">Preço/m²: <strong>R$ 9.500–14.000</strong></div><div class="meta-item">Padrão: <strong>Alto / Luxo</strong></div><div class="meta-item">Liquidez: <strong>Média</strong></div></div>
+      </div>
+    </div>
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:#1a3a5c"><h4>🏘 Morada da Colina</h4><span class="badge" style="background:rgba(255,255,255,.15);color:#ccc;font-size:10px">Médio-Alto</span></div>
+      <div class="bairro-body">Bairro da zona sul com forte apelo comercial e residencial. Adjacente ao Karaíba, oferece preços mais acessíveis com boa infraestrutura. Proxmidade com Uberlândia Shopping e Parque da Gávea. Lançamentos recentes da Perplan (Mariê 160) e ZP Empreendimentos (91m² a R$ 744k). Forte demanda de famílias que migram do Karaíba por custo-benefício. Tendência de valorização sustentada.
+        <div class="bairro-meta"><div class="meta-item">Preço/m²: <strong>R$ 7.500–9.000</strong></div><div class="meta-item">Yield: <strong>4,8% a.a.</strong></div><div class="meta-item">Liquidez: <strong>Média-Alta</strong></div></div>
+      </div>
+    </div>
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:var(--green)"><h4>🌳 Tibery</h4><span class="badge" style="background:rgba(255,255,255,.2);color:white;font-size:10px">Zona Leste</span></div>
+      <div class="bairro-body">Primeiro bairro formalmente designado de Uberlândia. Com mais de <strong>18 mil habitantes</strong>, concentra o Center Shopping (300+ operações), o Complexo Galassi e infraestrutura corporativa (UBT, Center Office). Demanda sustentada por +10.000 empregos no entorno imediato. Bom yield para studios e 2 quartos. Crescente verticalização residencial.
+        <div class="bairro-meta"><div class="meta-item">Preço/m²: <strong>R$ 6.000–7.500</strong></div><div class="meta-item">Yield: <strong>5,5% a.a.</strong></div><div class="meta-item">Liquidez: <strong>Média-Alta</strong></div></div>
+      </div>
+    </div>
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:#2a5298"><h4>🏡 Santa Mônica</h4><span class="badge" style="background:rgba(255,255,255,.15);color:#ccc;font-size:10px">Premium · Leste</span></div>
+      <div class="bairro-body">Maior bairro de Uberlândia (~45 mil hab.). Perfil residencial de médio-alto padrão, forte oferta de escolas e serviços. Maiores preços/m² da zona leste. Boa liquidez para 2–3 quartos. Crescente demanda de famílias próximas à UFU e ao Parque do Sabiá. Pipeline ativo de construtoras regionais. Índice de escolarização acima da média.
+        <div class="bairro-meta"><div class="meta-item">Preço/m²: <strong>R$ 7.500–9.000</strong></div><div class="meta-item">Yield: <strong>4,2% a.a.</strong></div><div class="meta-item">Liquidez: <strong>Média</strong></div></div>
+      </div>
+    </div>
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:var(--amber)"><h4>🏙 Brasil</h4><span class="badge" style="background:rgba(255,255,255,.2);color:white;font-size:10px">Médio Padrão</span></div>
+      <div class="bairro-body">Bairro central-leste, sede da Victria Construtora. Perfil comercial e residencial misto com boa serventia de transporte público. Alta liquidez e preços moderados. Verticalização em curso com boa absorção. Boa alternativa de entrada para renda mais acessível. Sede de construtoras regionais em expansão.
+        <div class="bairro-meta"><div class="meta-item">Preço/m²: <strong>R$ 5.000–6.500</strong></div><div class="meta-item">Yield: <strong>6,0% a.a.</strong></div><div class="meta-item">Liquidez: <strong>Alta</strong></div></div>
+      </div>
+    </div>
+    <div class="bairro-card">
+      <div class="bairro-header" style="background:#5a3e8a"><h4>🎓 Cazeca / Shopping Park</h4><span class="badge" style="background:rgba(255,255,255,.2);color:white;font-size:10px">Emergente</span></div>
+      <div class="bairro-body">Bairros em expansão com proximidade ao IFTM e Hospital Santa Marta. Shopping Park atrai lançamentos ZP e Vitta Residencial. Perfil de classe média e estudantes. Alta demanda de locação. Cazeca tem lançamentos a partir de R$ 744k (91m²). <strong>Potencial de valorização</strong> no médio prazo com crescimento do eixo sul-leste.
+        <div class="bairro-meta"><div class="meta-item">Preço/m²: <strong>R$ 5.500–7.500</strong></div><div class="meta-item">Yield: <strong>5,8% a.a.</strong></div><div class="meta-item">Liquidez: <strong>Alta</strong></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. MERCADO -->
+<section class="page" id="mercado">
+  <div class="page-header">
+    <div><div class="page-num">03 / 06 — Mercado Imobiliário</div><h1>Mercado <span>Residencial</span></h1></div>
+    <div class="page-badge">Delta Sul e Entorno</div>
+  </div>
+  <div class="kpi-grid kpi-grid-4">
+    <div class="kpi-card"><div class="kpi-label">Ticket Médio Karaíba</div><div class="kpi-value">R$ 1,9M</div><div class="kpi-sub">Apto 185m² · zona sul</div></div>
+    <div class="kpi-card"><div class="kpi-label">Preço Médio /m²</div><div class="kpi-value">R$ 11k</div><div class="kpi-sub">Novos lançamentos / Karaíba</div></div>
+    <div class="kpi-card"><div class="kpi-label">Yield Bruto Est.</div><div class="kpi-value">4,5% a.a.</div><div class="kpi-sub">Aluguel/Venda · zona sul premium</div></div>
+    <div class="kpi-card"><div class="kpi-label">Vacância Estimada</div><div class="kpi-value">~6%</div><div class="kpi-sub">Alto padrão · ticket reduz giro</div></div>
+  </div>
+  <div class="two-col" style="margin-bottom:28px">
+    <div class="chart-card"><h3>Tempo Médio Anúncio → Locação por Bairro (dias)</h3><canvas id="chartTempo"></canvas></div>
+    <div>
+      <div class="sec-title" style="font-size:14px">Análise de Liquidez</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="factor-card"><h4>⚡ Absorção no Alto Padrão</h4><p>O Jardim Karaíba tem ~142 anúncios de venda ativos com tempo médio de negociação superior a 40 dias — reflexo natural do ticket elevado, não de falta de demanda. Comprador de alto padrão é mais seletivo e demora mais, mas converte com valor maior.</p></div>
+        <div class="factor-card"><h4>📈 Valorização Comprovada</h4><p>Apartamentos do Triad entregues em 2015 por ~R$ 800k são revendidos hoje por R$ 2,4–2,6M — valorização de ~215% em 10 anos (~12% a.a. nominal), acima da inflação e da Selic média do período. Indicador sólido de solidez do endereço.</p></div>
+        <div class="factor-card"><h4>🏗 Pipeline Institucional</h4><p>A Brasal (incorporadora nacional, ~1M m² construídos) mantém presença consolidada com DUO (41 pav., entregue 2025) e projetos futuros, sinalizando confiança institucional de longo prazo no endereço.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-title">Tabela Comparativa por Bairro</div>
+  <div class="chart-card" style="padding:0;overflow:hidden;margin-bottom:28px">
+    <table class="data-table">
+      <thead><tr><th>Bairro / Zona</th><th>Preço Venda/m²</th><th>Aluguel 100m²/mês</th><th>Yield Bruto</th><th>T. Locação</th><th>Liquidez</th></tr></thead>
+      <tbody>
+        <tr><td>Brasil / Custódio Pereira</td><td>R$ 5.000–6.500</td><td>R$ 2.400–2.800</td><td>5,8–6,2% a.a.</td><td>18–22 dias</td><td><span class="badge badge-green">Alta</span></td></tr>
+        <tr><td>Cazeca / Shopping Park</td><td>R$ 5.500–7.500</td><td>R$ 2.500–3.200</td><td>5,5–6,0% a.a.</td><td>22 dias</td><td><span class="badge badge-green">Alta</span></td></tr>
+        <tr><td>Tibery</td><td>R$ 6.000–7.500</td><td>R$ 2.600–3.000</td><td>5,0–5,8% a.a.</td><td>25 dias</td><td><span class="badge badge-green">Média-Alta</span></td></tr>
+        <tr><td>Santa Mônica</td><td>R$ 7.500–9.000</td><td>R$ 3.000–3.800</td><td>4,2–4,8% a.a.</td><td>31 dias</td><td><span class="badge badge-amber">Média</span></td></tr>
+        <tr><td>Morada da Colina</td><td>R$ 7.500–9.000</td><td>R$ 3.200–4.000</td><td>4,5–5,0% a.a.</td><td>35 dias</td><td><span class="badge badge-amber">Média</span></td></tr>
+        <tr class="highlight-row"><td>⭐ Delta Sul / Karaíba (ativo)</td><td>R$ 9.500–14.000</td><td>R$ 4.500–7.000</td><td>4,0–4,8% a.a.</td><td>40–50 dias</td><td><span class="badge badge-amber">Média</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec-title">Fatores de Liquidez</div>
+  <div class="two-col">
+    <div class="factor-card"><h4>🏢 Alto Padrão Consolidado</h4><p>Empreendimentos da Brasal no Karaíba conferem credibilidade ao endereço e atraem compradores de alta renda de toda a região do Triângulo Mineiro e de outros estados.</p></div>
+    <div class="factor-card"><h4>🛣 Acessibilidade Sul–Centro</h4><p>Av. Nicomedes Alves e Rondon Pacheco conectam o bairro ao centro e à zona leste em menos de 15 min. Uberlândia Shopping a ~1,5 km eleva o apelo residencial consideravelmente.</p></div>
+    <div class="factor-card"><h4>📊 Valorização Histórica</h4><p>A zona sul registrou o maior crescimento de PIB industrial do Brasil em 20 anos. Empreendimentos triplicaram de valor desde 2015, indicando tendência secular de apreciação real.</p></div>
+    <div class="factor-card"><h4>⚠️ Risco: Ticket e VSO</h4><p>O alto ticket restringe o universo comprador. Para o CRI, monitorar VSO mensal (benchmark saudável: acima de 5%/mês) e estoque remanescente por andar — concentração nos andares altos sinaliza resistência de preço.</p></div>
+  </div>
+</section>
+
+<!-- 4. CONCORRÊNCIA -->
+<section class="page" id="concorrencia">
+  <div class="page-header">
+    <div><div class="page-num">04 / 06 — Análise Concorrencial</div><h1>Empreendimentos <span>Concorrentes</span></h1></div>
+    <div class="page-badge">Zona Sul · Uberlândia</div>
+  </div>
+  <div class="chart-card" style="margin-bottom:28px"><h3>Posicionamento de Preço — R$/m² por Empreendimento (Concorrentes vs. STAY TIBERY)</h3><canvas id="chartConcor"></canvas></div>
+  <div class="sec-title">Tabela Comparativa de Concorrentes</div>
+  <div class="chart-card" style="padding:0;overflow:hidden;margin-bottom:28px">
+    <table class="data-table">
+      <thead><tr><th>Empreendimento</th><th>Incorporadora</th><th>Bairro</th><th>m² Privativo</th><th>Preço Mín.</th><th>Preço Máx.</th><th>R$/m² médio</th><th>Pav.</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr class="highlight-row"><td>⭐ STAY TIBERY</td><td>Victria Construtora</td><td>Delta Sul</td><td>A confirmar</td><td>—</td><td>—</td><td>A apurar</td><td>—</td><td><span class="badge badge-gold">Lançamento</span></td></tr>
+        <tr><td>DUO Brasal (Nix + Gaia)</td><td>Brasal Incorporações</td><td>Jardim Karaíba</td><td>185–225 m²</td><td>R$ 1,87M</td><td>R$ 2,04M</td><td>~R$ 10.100/m²</td><td>41</td><td><span class="badge badge-green">Entregue 2025</span></td></tr>
+        <tr><td>Triad Vertical Residence</td><td>Brasal Incorporações</td><td>Jardim Karaíba</td><td>170–270 m²</td><td>R$ 1,80M</td><td>R$ 4,20M</td><td>~R$ 12.700/m²</td><td>~18</td><td><span class="badge badge-navy">Pronto</span></td></tr>
+        <tr><td>Arven Brasal</td><td>Brasal Incorporações</td><td>Jardim Karaíba</td><td>346 m²</td><td>R$ 3,5M</td><td>R$ 5,0M</td><td>~R$ 11.800/m²</td><td>30 un.</td><td><span class="badge badge-navy">Pronto</span></td></tr>
+        <tr><td>Sense Vertical Living Wind</td><td>Sense / Parceiros</td><td>Jardim Karaíba</td><td>135–137 m²</td><td>R$ 1,4M</td><td>R$ 1,9M</td><td>~R$ 10.900/m²</td><td>24</td><td><span class="badge badge-navy">Pronto</span></td></tr>
+        <tr><td>Torres do Sul</td><td>Inc. local</td><td>Jardim Karaíba</td><td>108–117 m²</td><td>R$ 900k</td><td>R$ 1,4M</td><td>~R$ 10.200/m²</td><td>3 torres</td><td><span class="badge badge-navy">Pronto</span></td></tr>
+        <tr><td>Mariê 160 — Perplan</td><td>Perplan</td><td>Morada da Colina</td><td>~160 m²</td><td>R$ 1,1M</td><td>R$ 1,6M</td><td>~R$ 8.100/m²</td><td>~20</td><td><span class="badge badge-amber">Em construção</span></td></tr>
+        <tr><td>ZP Empreendimentos</td><td>ZP</td><td>Morada da Colina</td><td>91 m²</td><td>R$ 744k</td><td>R$ 950k</td><td>~R$ 8.500/m²</td><td>—</td><td><span class="badge badge-amber">Em construção</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec-title">Narrativa de Posicionamento</div>
+  <div class="three-col">
+    <div class="factor-card"><h4>🎯 Segmento</h4><p>O STAY TIBERY está posicionado no <strong>alto padrão da zona sul</strong>, competindo diretamente com empreendimentos da Brasal. O endereço (Rua Rafael Marinho Neto, Delta Sul / Jardim Karaíba) confirma inserção no mercado de R$ 9.500–14.000/m².</p></div>
+    <div class="factor-card"><h4>🏆 Diferencial</h4><p>O <strong>patrimônio de afetação averbado</strong> confere segurança jurídica superior a concorrentes que não adotaram o regime. A Victria, como incorporadora recém-constituída (2025), precisará demonstrar VSO acima do benchmark de 5%/mês para sustentar o CRI.</p></div>
+    <div class="factor-card"><h4>⚠️ Risco Concorrencial</h4><p>A Brasal domina o pipeline com 3+ empreendimentos ativos. Risco de canibalização é <strong>moderado-alto</strong> — o comprador do Karaíba compara diretamente com DUO e Triad, produtos consolidados de incorporadora nacional com histórico comprovado de entrega e valorização.</p></div>
+  </div>
+</section>
+
+<!-- 5. INFRAESTRUTURA -->
+<section class="page" id="infraestrutura">
+  <div class="page-header">
+    <div><div class="page-num">05 / 06 — Infraestrutura Urbana</div><h1>Infra<span>estrutura</span></h1></div>
+    <div class="page-badge">Raio de Influência</div>
+  </div>
+  <div class="three-col" style="margin-bottom:18px">
+    <div class="infra-cat">
+      <div class="infra-cat-header">🚗 Mobilidade</div>
+      <div class="infra-item"><span>Av. Nicomedes Alves dos Santos</span><span class="infra-dist">~0,5 km</span></div>
+      <div class="infra-item"><span>Av. Rondon Pacheco</span><span class="infra-dist">~2,0 km</span></div>
+      <div class="infra-item"><span>Terminal de Ônibus zona sul</span><span class="infra-dist">~1,0 km</span></div>
+      <div class="infra-item"><span>Aeroporto C. Penna</span><span class="infra-dist">~9,0 km</span></div>
+    </div>
+    <div class="infra-cat">
+      <div class="infra-cat-header">🏥 Saúde</div>
+      <div class="infra-item"><span>UMC — Uberlândia Medical Center</span><span class="infra-dist">~0,8 km</span></div>
+      <div class="infra-item"><span>Hospital Santa Marta</span><span class="infra-dist">~2,5 km</span></div>
+      <div class="infra-item"><span>Hospital de Clínicas UFU</span><span class="infra-dist">~5,5 km</span></div>
+      <div class="infra-item"><span>Farmácias / Clínicas locais</span><span class="infra-dist">~0,3 km</span></div>
+    </div>
+    <div class="infra-cat">
+      <div class="infra-cat-header">🎓 Educação</div>
+      <div class="infra-item"><span>Colégio Ann Mackenzie</span><span class="infra-dist">~1,0 km</span></div>
+      <div class="infra-item"><span>Faculdade Anhanguera</span><span class="infra-dist">~2,0 km</span></div>
+      <div class="infra-item"><span>IFTM — Instituto Federal</span><span class="infra-dist">~2,5 km</span></div>
+      <div class="infra-item"><span>UFU — Campus Santa Mônica</span><span class="infra-dist">~5,0 km</span></div>
+    </div>
+  </div>
+  <div class="two-col" style="margin-bottom:28px">
+    <div class="infra-cat">
+      <div class="infra-cat-header">🛍 Comércio</div>
+      <div class="infra-item"><span>Uberlândia Shopping</span><span class="infra-dist">~1,5 km</span></div>
+      <div class="infra-item"><span>Supermercado BH / ABC</span><span class="infra-dist">~1,0 km</span></div>
+      <div class="infra-item"><span>Center Shopping Uberlândia</span><span class="infra-dist">~4,5 km</span></div>
+      <div class="infra-item"><span>Comércio local / padarias</span><span class="infra-dist">~0,3 km</span></div>
+    </div>
+    <div class="infra-cat">
+      <div class="infra-cat-header">🌳 Cultura & Lazer</div>
+      <div class="infra-item"><span>Parque da Gávea</span><span class="infra-dist">~1,0 km</span></div>
+      <div class="infra-item"><span>Praia Clube (301 mil m²)</span><span class="infra-dist">~3,0 km</span></div>
+      <div class="infra-item"><span>Parque do Sabiá / Galassi</span><span class="infra-dist">~5,0 km</span></div>
+      <div class="infra-item"><span>Terreirão do Samba / Vida noturna</span><span class="infra-dist">~2,5 km</span></div>
+    </div>
+  </div>
+  <div class="synthesis-box">
+    <h3>Síntese do Endereço — STAY TIBERY | Rua Rafael Marinho Neto, 135 — Delta Sul</h3>
+    <p>O empreendimento <strong style="color:var(--gold)">STAY TIBERY</strong>, incorporado pela Victria Construtora & Incorporadora sob patrimônio de afetação (matrícula 282.879 — 1º Ofício de RI de Uberlândia), está inserido no <strong style="color:white">Bairro Delta Sul / Jardim Karaíba, zona sul premium de Uberlândia/MG</strong> — a região de maior valorização imobiliária da cidade, com preços/m² que chegam a R$ 14.000 nos produtos mais exclusivos.<br><br>
+    A localização combina <strong style="color:var(--gold)">proximidade com o Uberlândia Shopping</strong> (~1,5 km), Parque da Gávea, Praia Clube e as Avenidas Nicomedes e Rondon Pacheco. O entorno imediato concentra empreendimentos consolidados da <strong style="color:white">Brasal Incorporações</strong> (referência nacional), validando o endereço junto ao mercado comprador de alta renda.<br><br>
+    A estrutura de <strong style="color:var(--gold)">patrimônio de afetação e CRI</strong> confere segurança jurídica reforçada: receitas vinculadas exclusivamente à conclusão, comissão de representantes com controle financeiro e vedação expressa de desvio de recursos. Imóvel declarado livre de ônus reais, fiscais e judiciais.</p>
+  </div>
+  <div class="aviso">⚠️ Esta análise é de caráter informativo e não substitui due diligence completa nem constitui recomendação de investimento. Dados com base em fontes públicas disponíveis em abril/2026.</div>
+</section>
+
+<!-- 6. MAPA -->
+<section class="page" id="mapa">
+  <div class="page-header">
+    <div><div class="page-num">06 / 06 — Localização</div><h1>Mapa do <span>Ativo</span></h1></div>
+    <div class="page-badge">STAY TIBERY — Delta Sul</div>
+  </div>
+  <div class="addr-strip">
+    <span style="font-size:22px">📍</span>
+    <div>
+      <div style="color:var(--gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:3px">Endereço do Empreendimento</div>
+      <div style="color:white;font-size:15px;font-weight:600">Rua Rafael Marinho Neto, 135 — Bairro Delta Sul / Jardim Karaíba</div>
+      <div style="color:rgba(255,255,255,.55);font-size:12px;margin-top:2px">Uberlândia — MG · Matrícula 282.879 · 1º Ofício de RI · Patrimônio de Afetação</div>
+    </div>
+  </div>
+  <div id="map"></div>
+  <div class="map-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold);border:2px solid var(--navy)"></div> STAY TIBERY</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Shopping</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Lazer / Parques</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--navy)"></div> Educação / Saúde</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Vias Estruturais</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7b4fbb"></div> Concorrentes</div>
+  </div>
+  <div class="three-col" style="margin-top:22px">
+    <div class="factor-card"><h4>📌 Posicionamento Premium</h4><p>Delta Sul / Jardim Karaíba tem os maiores preços/m² de Uberlândia (R$ 9.500–14.000) e pipeline ativo de incorporadoras nacionais, validando o endereço para o segmento de alto padrão.</p></div>
+    <div class="factor-card"><h4>🛣 Acessibilidade</h4><p>Acesso direto à Av. Nicomedes Alves dos Santos (~0,5 km). Raio de 5 km cobre Uberlândia Shopping, IFTM, Praia Clube e o centro da cidade.</p></div>
+    <div class="factor-card"><h4>🏗 Regime de Afetação</h4><p>Matrícula 282.879 averbada no 1º Ofício de RI. Imóvel livre de ônus. Segregação patrimonial total entre o empreendimento e o patrimônio geral da Victria Construtora.</p></div>
+  </div>
+  <div class="aviso">⚠️ Esta análise é de caráter informativo e não substitui due diligence completa nem constitui recomendação de investimento. Dados com base em fontes públicas disponíveis em abril/2026.</div>
+</section>
+
+</main>
+
+<script>
+// NAV SCROLL
+const sections=document.querySelectorAll('section.page');
+const navLinks=document.querySelectorAll('.nav-link');
+navLinks.forEach(l=>l.addEventListener('click',function(){navLinks.forEach(x=>x.classList.remove('active'));this.classList.add('active')}));
+new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;navLinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id))}})},{threshold:0.3}).observe&&sections.forEach(s=>new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;navLinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id))}})},{threshold:0.3}).observe(s));
+
+// CHART: Pop
+new Chart(document.getElementById('chartPop'),{type:'line',data:{labels:['2019','2020','2021','2022','2023','2025'],datasets:[{label:'Habitantes',data:[691305,706597,706597,713224,736965,761835],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.08)',borderWidth:2.5,pointBackgroundColor:'#0D1B2A',pointBorderColor:'#C9A84C',pointBorderWidth:2,pointRadius:5,fill:true,tension:.35}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k',font:{size:10},color:'#9E9892'},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:10},color:'#9E9892'},grid:{display:false}}}}});
+
+// CHART: Bairros anúncios
+new Chart(document.getElementById('chartBairrosPop'),{type:'bar',data:{labels:['Santa Mônica','Tibery','Jardim Karaíba','Morada Colina','Brasil','Cazeca'],datasets:[{data:[231,173,142,120,95,87],backgroundColor:['#2a5298','#1F6B42','#C9A84C','#1a3a5c','#B8711A','#5a3e8a'],borderRadius:5}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#9E9892'},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{size:10},color:'#0D1B2A'},grid:{display:false}}}}});
+
+// CHART: Preços
+new Chart(document.getElementById('chartPrecos'),{type:'bar',data:{labels:['Brasil','Cazeca/Sh.Park','Tibery','Morada Colina','Santa Mônica','Delta Sul/Karaíba'],datasets:[{data:[5750,6500,6750,8250,8250,11750],backgroundColor:['#1F6B42','#1F6B42','#C9A84C','#B8711A','#B8711A','#922620'],borderRadius:5}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR'),font:{size:9},color:'#9E9892'},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{size:10},color:'#0D1B2A'},grid:{display:false}}}}});
+
+// CHART: Tempo
+new Chart(document.getElementById('chartTempo'),{type:'bar',data:{labels:['Brasil','Cazeca','Tibery','Santa Mônica','Morada Colina','Karaíba/Delta Sul'],datasets:[{data:[20,22,25,31,35,45],backgroundColor:ctx=>{const v=ctx.raw;return v<=25?'#1F6B42':v<=35?'#C9A84C':'#922620'},borderRadius:5}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+'d',font:{size:10},color:'#9E9892'},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{size:10},color:'#0D1B2A'},grid:{display:false}}}}});
+
+// CHART: Concorrentes
+new Chart(document.getElementById('chartConcor'),{type:'bar',data:{labels:['ZP Morada Colina 91m²','Mariê 160 Perplan','Torres do Sul 108-117m²','Sense Wind 135-137m²','DUO Brasal 185-225m²','Arven Brasal 346m²','Triad Residence 170-270m²'],datasets:[{data:[8500,8100,10200,10900,10100,11800,12700],backgroundColor:['#1F6B42','#1F6B42','#B8711A','#B8711A','#922620','#7b1d1d','#7b1d1d'],borderRadius:5}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'R$ '+ctx.raw.toLocaleString('pt-BR')+'/m²'}}},scales:{x:{ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR'),font:{size:9},color:'#9E9892'},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{size:9.5},color:'#0D1B2A'},grid:{display:false}}}}});
+
+// MAP
+const LAT=-18.9513895,LNG=-48.2611018;
+const map=L.map('map',{zoomControl:true,scrollWheelZoom:false}).setView([LAT,LNG],14);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(map);
+function mkIcon(c,s=16){return L.divIcon({className:'',html:`<div style="width:${s}px;height:${s}px;border-radius:50%;background:${c};border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>`,iconSize:[s,s],iconAnchor:[s/2,s/2],popupAnchor:[0,-(s/2+4)]})}
+L.marker([LAT,LNG],{icon:L.divIcon({className:'',html:'<div style="width:28px;height:28px;border-radius:50%;background:#C9A84C;border:3px solid #0D1B2A;box-shadow:0 3px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:13px">📍</div>',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18]}),zIndexOffset:1000}).addTo(map).bindPopup('<b style="font-size:13px;color:#0D1B2A">⭐ STAY TIBERY</b><br>Rua Rafael Marinho Neto, 135<br>Delta Sul / Jardim Karaíba<br><span style="color:#B8711A;font-weight:600">Patrimônio de Afetação · Mat. 282.879</span>').openPopup();
+[{lat:-18.9420,lng:-48.2760,c:'#922620',n:'Uberlândia Shopping',d:'~1,5 km',cat:'Shopping'},{lat:-18.9180,lng:-48.2730,c:'#922620',n:'Center Shopping',d:'~4,5 km',cat:'Shopping'},{lat:-18.9480,lng:-48.2660,c:'#1F6B42',n:'Parque da Gávea',d:'~1,0 km',cat:'Lazer'},{lat:-18.9680,lng:-48.2870,c:'#1F6B42',n:'Praia Clube',d:'~3,0 km',cat:'Lazer'},{lat:-18.9520,lng:-48.2530,c:'#0D1B2A',n:'UMC Medical Center',d:'~0,8 km',cat:'Saúde'},{lat:-18.9190,lng:-48.2510,c:'#0D1B2A',n:'Hospital Clínicas UFU',d:'~5,5 km',cat:'Saúde'},{lat:-18.9460,lng:-48.2690,c:'#B8711A',n:'Av. Nicomedes Alves',d:'~0,5 km',cat:'Via'},{lat:-18.9300,lng:-48.2700,c:'#B8711A',n:'Av. Rondon Pacheco',d:'~2,0 km',cat:'Via'},{lat:-18.9530,lng:-48.2620,c:'#7b4fbb',n:'DUO Brasal (concorrente)',d:'~0,2 km',cat:'Concorrente'},{lat:-18.9510,lng:-48.2605,c:'#7b4fbb',n:'Triad Vertical (concorrente)',d:'~0,1 km',cat:'Concorrente'}].forEach(p=>L.marker([p.lat,p.lng],{icon:mkIcon(p.c)}).addTo(map).bindPopup(`<b style="color:#0D1B2A">${p.n}</b><br><span style="color:#9E9892;font-size:11px">${p.cat}</span><br><span style="color:#B8711A;font-weight:600">${p.d} do ativo</span>`));
+L.circle([LAT,LNG],{radius:2000,color:'#C9A84C',fillColor:'#C9A84C',fillOpacity:.05,weight:1.5,dashArray:'6 4'}).addTo(map);
+</script>
+</body>
+</html>
